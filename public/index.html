@@ -3985,6 +3985,35 @@ Charlie,35,Berlin'></textarea>
 
 <script>
 
+/* ============================================================
+   EARLY SECURITY GATE — runs before anything else.
+   Guarantees the Contact History tab is hidden unless the
+   developer has a valid (recent) unlock in this browser session.
+   Unlock expires after 24 hours regardless of session state.
+============================================================ */
+(function enforceContactHistoryGate() {
+  try {
+    const raw = sessionStorage.getItem('jsonpi.devUnlocked');
+    let valid = false;
+    if (raw) {
+      const ts = parseInt(raw, 10);
+      // Accept either valid timestamp within TTL, or treat old '1' values as expired.
+      if (Number.isFinite(ts) && (Date.now() - ts < 24 * 60 * 60 * 1000)) {
+        valid = true;
+      } else {
+        sessionStorage.removeItem('jsonpi.devUnlocked');
+      }
+    }
+    const tab = document.querySelector('.tab[data-tab="contact-history"]');
+    if (tab) {
+      if (valid) tab.removeAttribute('hidden');
+      else tab.setAttribute('hidden', '');
+    }
+  } catch (_) {
+    /* If storage is blocked, the tab stays hidden (the default) */
+  }
+})();
+
 const State = {
   parsed: null,            
   parsedFromData: null,    
@@ -7538,7 +7567,26 @@ const DEFAULT_SETTINGS = {
 };
 
 let devSettings = loadDevSettings();
-let devUnlocked = sessionStorage.getItem(DEV_UNLOCK_KEY) === '1';
+
+/* Dev unlock expires after 24 hours regardless of browser session state.
+   We store a timestamp (not a boolean) so stale unlocks always expire.
+   This prevents the "Contact History stays visible even after browser close" bug
+   that can happen because sessionStorage can persist longer than expected. */
+const DEV_UNLOCK_TTL_MS = 24 * 60 * 60 * 1000;
+function isDevUnlockValid() {
+  try {
+    const raw = sessionStorage.getItem(DEV_UNLOCK_KEY);
+    if (!raw) return false;
+    const ts = parseInt(raw, 10);
+    if (!Number.isFinite(ts)) return false;
+    if (Date.now() - ts > DEV_UNLOCK_TTL_MS) {
+      sessionStorage.removeItem(DEV_UNLOCK_KEY);
+      return false;
+    }
+    return true;
+  } catch (_) { return false; }
+}
+let devUnlocked = isDevUnlockValid();
 
 function loadDevSettings() {
   try {
@@ -7668,7 +7716,7 @@ async function submitDevGate() {
     const hash = await sha256(code);
     if (hash === DEV_CODE_HASH) {
       devUnlocked = true;
-      sessionStorage.setItem(DEV_UNLOCK_KEY, '1');
+      sessionStorage.setItem(DEV_UNLOCK_KEY, String(Date.now()));
       devGateMessage.textContent = '✓ Unlocked.';
       devGateMessage.className = 'success';
       devGateBtn.classList.add('unlocked');
@@ -7711,7 +7759,7 @@ document.getElementById('btn-dev-reset').addEventListener('click', () => {
 document.getElementById('btn-dev-logout').addEventListener('click', () => {
   devUnlocked = false;
   sessionStorage.removeItem(DEV_UNLOCK_KEY);
-  sessionStorage.removeItem('jsonpi.adminToken');
+  localStorage.removeItem('jsonpi.adminToken');
   devGateBtn.classList.remove('unlocked');
   devGateBtn.title = 'Developer access';
   showContactHistoryTab(false);
@@ -9227,9 +9275,16 @@ const ADMIN_TOKEN_KEY = 'jsonpi.adminToken';
 
 function showContactHistoryTab(show) {
   const tab = document.querySelector('.tab[data-tab="contact-history"]');
-  if (tab) {
-    if (show) tab.removeAttribute('hidden');
-    else tab.setAttribute('hidden', '');
+  if (!tab) return;
+  if (show) {
+    tab.removeAttribute('hidden');
+  } else {
+    tab.setAttribute('hidden', '');
+    // If the user was viewing the panel when we hid the tab, fall back to a default panel
+    if (tab.classList.contains('active')) {
+      const fallback = document.querySelector('.tab[data-tab="json-in"]');
+      if (fallback) fallback.click();
+    }
   }
 }
 
@@ -9261,7 +9316,7 @@ function showContactHistoryTab(show) {
         headers: { 'X-Admin-Token': token },
       });
       if (response.status === 401 || response.status === 403) {
-        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
         showGate(true);
         errEl.textContent = '✗ Invalid admin token.';
         return;
@@ -9274,7 +9329,7 @@ function showContactHistoryTab(show) {
       }
       const data = await response.json();
       allContacts = data.contacts || [];
-      sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+      localStorage.setItem(ADMIN_TOKEN_KEY, token);
       showGate(false);
       renderList();
     } catch (err) {
@@ -9349,11 +9404,11 @@ function showContactHistoryTab(show) {
   searchEl.addEventListener('input', renderList);
   sortEl.addEventListener('change', renderList);
   refreshBtn.addEventListener('click', () => {
-    const t = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+    const t = localStorage.getItem(ADMIN_TOKEN_KEY);
     if (t) fetchContacts(t);
   });
   logoutBtn.addEventListener('click', () => {
-    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
     allContacts = [];
     listEl.innerHTML = '<div class="output-empty">Logged out.</div>';
     showGate(true);
@@ -9371,7 +9426,7 @@ function showContactHistoryTab(show) {
   const tabBtn = document.querySelector('.tab[data-tab="contact-history"]');
   if (tabBtn) {
     tabBtn.addEventListener('click', () => {
-      const t = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+      const t = localStorage.getItem(ADMIN_TOKEN_KEY);
       if (t) fetchContacts(t);
       else showGate(true);
     });
@@ -9438,7 +9493,7 @@ function showContactHistoryTab(show) {
       statusEl.className = 'error';
       return;
     }
-    const token = sessionStorage.getItem('jsonpi.adminToken');
+    const token = localStorage.getItem('jsonpi.adminToken');
     if (!token) {
       statusEl.textContent = '✗ Admin token missing. Re-authenticate in the Contact History tab.';
       statusEl.className = 'error';
