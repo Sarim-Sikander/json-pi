@@ -134,9 +134,7 @@ Visit `https://YOUR-SITE-NAME.netlify.app` — you should see Json-Pi.
 
 ### 2. The API works
 ```bash
-curl -X POST https://YOUR-SITE-NAME.netlify.app/api/parse \
-  -H "Content-Type: application/json" \
-  -d '{"text":"{name: \"Acme\"}","auto_fix":true}'
+curl -X POST https://YOUR-SITE-NAME.netlify.app/api/parse -H "Content-Type: application/json" -d '{"text":"{name: \"Acme\"}","auto_fix":true}'
 ```
 Should return JSON with `"ok":true`.
 

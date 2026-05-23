@@ -1,0 +1,10 @@
+# Json-Pi — https://json-pi.com
+# Allow all crawlers to index the app, but exclude API endpoints
+# (they return JSON, not pages, and shouldn't show up in search results).
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /.netlify/
+
+Sitemap: https://json-pi.com/sitemap.xml
