@@ -1,0 +1,9 @@
+{
+  "name": "json-pi",
+  "version": "1.0.0",
+  "description": "Json-Pi static site + Netlify Functions API",
+  "private": true,
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
