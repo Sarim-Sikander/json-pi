@@ -40,6 +40,41 @@ exports.handler = async (event) => {
       return lib.error(500, 'storage_error', 'Could not load contacts.');
     }
     const contacts = await response.json();
+
+    // Fetch reply summaries for these contacts
+    let replyMap = {};
+    try {
+      const rResp = await fetch(
+        SUPABASE_URL + '/rest/v1/replies?select=contact_id,created_at&order=created_at.desc&limit=5000',
+        {
+          headers: {
+            'apikey': SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+          },
+        }
+      );
+      if (rResp.ok) {
+        const allReplies = await rResp.json();
+        for (const r of allReplies) {
+          const cid = r.contact_id;
+          if (!replyMap[cid]) replyMap[cid] = { count: 0, last_at: null };
+          replyMap[cid].count++;
+          if (!replyMap[cid].last_at || new Date(r.created_at) > new Date(replyMap[cid].last_at)) {
+            replyMap[cid].last_at = r.created_at;
+          }
+        }
+      }
+    } catch (e) {
+      // If replies table doesn't exist yet or fetch fails, just omit reply info
+      console.warn('Could not fetch reply summaries:', e.message);
+    }
+
+    for (const c of contacts) {
+      const info = replyMap[c.id];
+      c.reply_count = info ? info.count : 0;
+      c.last_reply_at = info ? info.last_at : null;
+    }
+
     return lib.respond(200, { ok: true, contacts });
   } catch (e) {
     console.error('Contact-history handler error:', e);

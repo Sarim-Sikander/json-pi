@@ -2755,6 +2755,152 @@
   html.theme-dark #contact-form-status.success { background: #052e1a; color: #86efac; border-color: #166534; }
   html.theme-dark #contact-form-status.error { background: #2a0f0f; color: #fca5a5; border-color: #7f1d1d; }
 
+  /* Contact card actions + replied badge */
+  .contact-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .contact-replied-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: var(--success-bg);
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--sans);
+  }
+  html.theme-dark .contact-replied-badge {
+    background: #052e1a;
+    color: #86efac;
+    border-color: #166534;
+  }
+  .contact-card-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .btn-reply {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: inherit;
+  }
+  .btn-reply:hover:not(:disabled) {
+    background: var(--text);
+    color: var(--surface);
+    border-color: var(--text);
+  }
+  .btn-reply:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Reply modal */
+  .reply-modal {
+    max-width: 640px;
+  }
+  .reply-original {
+    margin: 16px 0 18px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--border-strong);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .reply-original-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .reply-original-subject {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .reply-original-body {
+    font-size: 12.5px;
+    color: var(--text-2);
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .reply-field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  #reply-body {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13.5px;
+    background: var(--surface);
+    color: var(--text);
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.5;
+  }
+  #reply-body:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+  }
+  .reply-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .reply-from-info {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--mono);
+  }
+  #reply-modal-status {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  #reply-modal-status.success {
+    padding: 10px 14px;
+    background: var(--success-bg);
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+  }
+  #reply-modal-status.error {
+    padding: 10px 14px;
+    background: var(--error-bg);
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+  }
+  html.theme-dark #reply-modal-status.success { background: #052e1a; color: #86efac; border-color: #166534; }
+  html.theme-dark #reply-modal-status.error { background: #2a0f0f; color: #fca5a5; border-color: #7f1d1d; }
+  html.theme-dark .reply-original { background: #1c1c1c; }
+
   @media (max-width: 768px) {
     .info-modal {
       padding: 20px 22px;
@@ -3656,6 +3802,35 @@ Charlie,35,Berlin'></textarea>
     </nav>
     <div class="footer-copy">© 2026 Json-Pi · Built by Sarim Sikander</div>
   </footer>
+
+  <!-- ============== REPLY MODAL ============== -->
+  <div id="reply-modal-backdrop" class="info-modal-backdrop" hidden>
+    <div class="info-modal reply-modal" role="dialog" aria-modal="true">
+      <button class="info-modal-close" aria-label="Close" id="btn-reply-modal-close">×</button>
+      <h2>Reply to message</h2>
+      <p class="info-meta" id="reply-modal-meta"></p>
+
+      <div class="reply-original">
+        <div class="reply-original-label">Original message</div>
+        <div class="reply-original-subject" id="reply-original-subject"></div>
+        <div class="reply-original-body" id="reply-original-body"></div>
+      </div>
+
+      <label class="reply-field-label">Your reply</label>
+      <textarea id="reply-body" rows="8" maxlength="10000" placeholder="Write your reply here..."></textarea>
+      <div class="reply-meta-row">
+        <span class="reply-from-info">From: contact@json-pi.com · Reply-To: sarimsikander24@gmail.com</span>
+        <span class="contact-char-count"><span id="reply-char-count">0</span> / 10000</span>
+      </div>
+
+      <div id="reply-modal-status"></div>
+
+      <div class="contact-form-actions">
+        <button type="button" class="btn-ghost" id="btn-reply-cancel">Cancel</button>
+        <button type="button" class="btn-primary" id="btn-reply-send">Send reply</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ============== INFO MODALS ============== -->
   <div id="info-modal-backdrop" class="info-modal-backdrop" hidden>
@@ -9136,15 +9311,40 @@ function showContactHistoryTab(show) {
     if (c.name) fromBits.push('<span class="contact-from-name">' + escapeHtml(c.name) + '</span>');
     if (c.email) fromBits.push('<span class="contact-from-email">&lt;<a href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>&gt;</span>');
     const from = fromBits.length ? fromBits.join(' ') : '<span class="contact-card-anon">anonymous</span>';
-    return '<article class="contact-card">' +
+
+    let replyIndicator = '';
+    if (c.reply_count > 0) {
+      const lastReply = c.last_reply_at ? new Date(c.last_reply_at).toLocaleString() : '';
+      replyIndicator = '<span class="contact-replied-badge" title="Last reply: ' + escapeHtml(lastReply) + '">✓ Replied' + (c.reply_count > 1 ? ' ' + c.reply_count + '×' : '') + '</span>';
+    }
+
+    const replyBtnAttrs = c.email
+      ? 'data-reply-id="' + escapeHtml(String(c.id)) + '"'
+      : 'disabled title="No email — cannot reply"';
+    const replyBtn = '<button class="btn-reply" ' + replyBtnAttrs + '>↩ Reply</button>';
+
+    return '<article class="contact-card" data-contact-id="' + escapeHtml(String(c.id)) + '">' +
       '<div class="contact-card-head">' +
         '<div class="contact-card-subject">' + escapeHtml(c.subject || '(no subject)') + '</div>' +
-        '<div class="contact-card-time">' + escapeHtml(when) + '</div>' +
+        '<div class="contact-card-meta">' +
+          replyIndicator +
+          '<div class="contact-card-time">' + escapeHtml(when) + '</div>' +
+        '</div>' +
       '</div>' +
       '<div class="contact-card-from">From: ' + from + '</div>' +
       '<div class="contact-card-message">' + escapeHtml(c.message || '') + '</div>' +
+      '<div class="contact-card-actions">' + replyBtn + '</div>' +
     '</article>';
   }
+
+  // Reply button delegation
+  listEl.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-reply');
+    if (!btn || btn.disabled) return;
+    const contactId = btn.getAttribute('data-reply-id');
+    const contact = allContacts.find(c => String(c.id) === contactId);
+    if (contact && window.openReplyModal) window.openReplyModal(contact);
+  });
 
   searchEl.addEventListener('input', renderList);
   sortEl.addEventListener('change', renderList);
@@ -9176,6 +9376,114 @@ function showContactHistoryTab(show) {
       else showGate(true);
     });
   }
+})();
+
+/* ============================================================
+   REPLY MODAL — send email reply via /api/contact-reply
+============================================================ */
+(function setupReplyModal() {
+  const backdrop = document.getElementById('reply-modal-backdrop');
+  if (!backdrop) return;
+  const closeBtn = document.getElementById('btn-reply-modal-close');
+  const cancelBtn = document.getElementById('btn-reply-cancel');
+  const sendBtn = document.getElementById('btn-reply-send');
+  const bodyEl = document.getElementById('reply-body');
+  const charCount = document.getElementById('reply-char-count');
+  const statusEl = document.getElementById('reply-modal-status');
+  const metaEl = document.getElementById('reply-modal-meta');
+  const origSubjectEl = document.getElementById('reply-original-subject');
+  const origBodyEl = document.getElementById('reply-original-body');
+
+  let currentContactId = null;
+
+  function open(contact) {
+    currentContactId = contact.id;
+    metaEl.textContent = 'To: ' + (contact.name ? contact.name + ' <' + contact.email + '>' : contact.email);
+    origSubjectEl.textContent = contact.subject || '(no subject)';
+    origBodyEl.textContent = contact.message || '';
+    bodyEl.value = '';
+    statusEl.textContent = '';
+    statusEl.className = '';
+    charCount.textContent = '0';
+    backdrop.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => bodyEl.focus(), 50);
+  }
+  function close() {
+    backdrop.hidden = true;
+    document.body.style.overflow = '';
+    currentContactId = null;
+  }
+
+  bodyEl.addEventListener('input', () => {
+    charCount.textContent = bodyEl.value.length;
+  });
+
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !backdrop.hidden) close();
+  });
+
+  sendBtn.addEventListener('click', async () => {
+    const reply = bodyEl.value.trim();
+    if (!reply) {
+      statusEl.textContent = '✗ Reply body is empty.';
+      statusEl.className = 'error';
+      return;
+    }
+    if (reply.length > 10000) {
+      statusEl.textContent = '✗ Reply exceeds 10000 characters.';
+      statusEl.className = 'error';
+      return;
+    }
+    const token = sessionStorage.getItem('jsonpi.adminToken');
+    if (!token) {
+      statusEl.textContent = '✗ Admin token missing. Re-authenticate in the Contact History tab.';
+      statusEl.className = 'error';
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+    statusEl.textContent = '';
+    statusEl.className = '';
+
+    try {
+      const response = await fetch('/api/contact-reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': token,
+        },
+        body: JSON.stringify({ contact_id: currentContactId, reply_body: reply }),
+      });
+      const data = await response.json();
+      if (response.ok && data.ok) {
+        statusEl.textContent = '✓ Reply sent to ' + data.sent_to;
+        statusEl.className = 'success';
+        // Trigger contact history refresh after a moment so the "Replied" badge updates
+        setTimeout(() => {
+          close();
+          const refreshBtn = document.getElementById('btn-contact-refresh');
+          if (refreshBtn) refreshBtn.click();
+        }, 1400);
+      } else {
+        statusEl.textContent = '✗ ' + (data.message || 'Could not send reply.');
+        statusEl.className = 'error';
+      }
+    } catch (err) {
+      statusEl.textContent = '✗ Network error: ' + err.message;
+      statusEl.className = 'error';
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send reply';
+    }
+  });
+
+  // Expose for the contact history list to call
+  window.openReplyModal = open;
 })();
 
 applyDevSettings();

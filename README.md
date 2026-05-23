@@ -62,6 +62,21 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 
 Save this token somewhere safe (a password manager). You'll need it in Netlify's env vars AND when accessing the Contact History tab.
 
+### Part 2b: Resend setup for email replies (~5 minutes)
+
+The "Reply" button in the Contact History tab uses Resend to send emails. Skip this section if you don't need to reply to users from inside the app.
+
+1. Go to https://resend.com and sign up (free)
+2. Add your domain: **Domains** → **Add Domain** → `json-pi.com`
+3. Resend gives you 3 DNS records (SPF, DKIM, DMARC). Add them at your DNS provider (Cloudflare/registrar). Most providers have a one-click "Auto configure" if your domain is on Cloudflare.
+4. Wait for status to change to **Verified** (usually 1-5 minutes)
+5. Go to **API Keys** → **Create API Key** → name it `json-pi-production`, permission `Sending access`
+6. Copy the key (starts with `re_...`). You'll add it to Netlify in Part 4.
+
+### Part 2c: Add the replies table to Supabase
+
+Run `supabase-add-replies-table.sql` in the Supabase SQL Editor (same as Part 1, step 6). This creates a `replies` table to track sent emails.
+
 ### Part 3: Push to GitHub
 
 1. Create a new Git repository (private if you prefer; Netlify can deploy either way)
@@ -103,6 +118,7 @@ node_modules/
    | `SUPABASE_URL` | `https://xxxxxxxxxxxx.supabase.co` (from Part 1) |
    | `SUPABASE_SERVICE_KEY` | the service_role key (from Part 1) |
    | `ADMIN_TOKEN` | the token you generated (from Part 2) |
+   | `RESEND_API_KEY` | the Resend API key (from Part 2b, only if using email replies) |
 
 7. Click **Deploy site**
 8. Wait 30-60 seconds for the first build. You'll get a URL like `https://random-name-12345.netlify.app`
@@ -134,7 +150,9 @@ Visit `https://YOUR-SITE-NAME.netlify.app` — you should see Json-Pi.
 
 ### 2. The API works
 ```bash
-curl -X POST https://YOUR-SITE-NAME.netlify.app/api/parse -H "Content-Type: application/json" -d '{"text":"{name: \"Acme\"}","auto_fix":true}'
+curl -X POST https://YOUR-SITE-NAME.netlify.app/api/parse \
+  -H "Content-Type: application/json" \
+  -d '{"text":"{name: \"Acme\"}","auto_fix":true}'
 ```
 Should return JSON with `"ok":true`.
 
@@ -173,6 +191,7 @@ All POST (except `contact-history` which is GET), all return JSON, all support C
 | `POST /api/diff`             | Compare two documents | none |
 | `POST /api/contact`          | Submit contact form | none |
 | `GET  /api/contact-history`  | Fetch all contacts | `X-Admin-Token` header |
+| `POST /api/contact-reply`    | Send an email reply to a contact | `X-Admin-Token` header |
 
 Full code examples for each endpoint in the Developers tab of the live site.
 
