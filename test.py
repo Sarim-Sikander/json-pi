@@ -1,7 +1,7 @@
 import requests
 
 response = requests.post(
-    "https://json-pi.netlify.app/v1/parse",
+    "https://www.json-pi.com/v1/parse",
     json={
         "text": "{name: \"Acme\", active: true,}",
         "format": "json",
