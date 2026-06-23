@@ -1,4 +1,4 @@
-# Json-Pi — Complete Deployment Guide
+# Json-Pi — Complete Deployment Guide - Complete
 
 A single-page web app for parsing, converting, validating, and analyzing JSON/YAML/CSV data, with a public REST API backed by Netlify Functions and a contact form backed by Supabase.
 
