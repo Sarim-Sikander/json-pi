@@ -26,7 +26,7 @@ CREATE INDEX IF NOT EXISTS contacts_created_at_idx ON contacts(created_at DESC);
 -- ============================================================
 
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-
+select * from contacts;
 -- Explicitly: no policies defined → no access for anon/public keys.
 -- Only the service_role key (used server-side in Netlify) can read/write.
 
